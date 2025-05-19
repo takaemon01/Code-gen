@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>数字コード</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <button onclick="createCode()">作成</button>
+  <div id="codeList"></div>
+
+  <script>
+    const states = ['◯', '×', '△'];
+    const stateStyles = {
+      '◯': { color: '#0f0', border: '#0f0' },
+      '×': { color: '#f00', border: '#f00' },
+      '△': { color: '#ff0', border: '#ff0' }
+    };
+
+    function getRandomCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let code = '';
+      for (let i = 0; i < 4; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
+    function createCode() {
+      const code = getRandomCode();
+      const state = '◯';
+      addCodeElement(code, state);
+      saveCodes();
+    }
+
+    function addCodeElement(code, state) {
+      const wrapper = document.createElement('div');
+      wrapper.classList.add('code-item');
+
+      let stateIndex = states.indexOf(state);
+      const span = document.createElement('span');
+      span.textContent = `${code}${state}`;
+      applyStyle(wrapper, state);
+
+      span.onclick = function () {
+        stateIndex = (stateIndex + 1) % states.length;
+        const newState = states[stateIndex];
+        span.textContent = `${code}${newState}`;
+        applyStyle(wrapper, newState);
+        saveCodes();
+      };
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '×';
+      deleteBtn.className = 'delete-button';
+      deleteBtn.onclick = function () {
+        wrapper.remove();
+        saveCodes();
+      };
+
+      wrapper.appendChild(span);
+      wrapper.appendChild(deleteBtn);
+      document.getElementById('codeList').appendChild(wrapper);
+    }
+
+    function applyStyle(element, state) {
+      const style = stateStyles[state];
+      element.style.color = style.color;
+      element.style.borderColor = style.border;
+    }
+
+    function saveCodes() {
+      const data = [];
+      document.querySelectorAll('.code-item').forEach(item => {
+        const text = item.querySelector('span').textContent;
+        data.push({ code: text.slice(0, 4), state: text.slice(4) });
+      });
+      localStorage.setItem('codeList', JSON.stringify(data));
+    }
+
+    function restoreCodes() {
+      const raw = localStorage.getItem('codeList');
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        data.forEach(({ code, state }) => {
+          addCodeElement(code, state);
+        });
+      } catch (e) {
+        console.error("復元失敗:", e);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', restoreCodes);
+  </script>
+</body>
+</html>
